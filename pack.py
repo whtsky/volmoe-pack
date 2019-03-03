@@ -7,15 +7,16 @@ from pathlib import Path
 
 SUPPORTED_IMG_EXTENSIONS = ['jpg', 'jpeg', 'png']
 
-if len(sys.argv) < 3:
-    print("Usage: {} <base_path> <output_path> [episode-per-pack=5]".format(sys.argv[0]))
+if len(sys.argv) < 2:
+    print("Usage: {} <base_path> [output_path=base_path] [episode-per-pack=5]".format(sys.argv[0]))
+    sys.exit()
 
 episode_number = re.compile("(\d+)")
 def get_episode_number(path: Path):
     return episode_number.findall(path.name)[0]
 
 base_path = Path(sys.argv[1])
-output_path = Path(sys.argv[2])
+output_path = len(sys.argv) >= 3 and Path(sys.argv[2]) or base_path
 output_path.mkdir(exist_ok=True)
 
 episoide_per_pack = len(sys.argv) == 4 and int(sys.argv[3]) or 5
