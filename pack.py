@@ -2,6 +2,7 @@ import sys
 import re
 import zipfile
 import tempfile
+import itertools
 
 from pathlib import Path
 
@@ -35,7 +36,14 @@ def grouper(folders):
         folders = folders[episoide_per_pack:]
 
 
-folders = sorted([x for x in base_path.iterdir() if x.is_dir()])
+def check_image_file_length(folders):
+    files = list(itertools.chain(*map(glob_images, folders)))
+    if len(set(map(len, [x.stem for x in files]))) not in (0, 1):
+        raise Exception('文件名数字序号长度需要保持一致\n%s' % '\n'.join(map(str, files)))
+
+
+folders = sorted([x for x in base_path.iterdir() if x.is_dir() and not x.name.startswith('.')])
+check_image_file_length(folders)
 for group in grouper(folders):
     print(group)
     pack_name = "{}-{}".format(get_episode_number(group[0]), get_episode_number(group[-1]))
