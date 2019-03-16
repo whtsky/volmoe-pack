@@ -18,9 +18,15 @@ parser.add_argument(
     help="how many episode per zip pack",
     default=5,
 )
+parser.add_argument(
+    "-t",
+    "--trailing",
+    choices=["merge", "ignore", "pack"],
+    help="how to deal with trailing volumes",
+    default="pack"
+)
 
 args = parser.parse_args()
-print(args)
 
 SUPPORTED_IMG_EXTENSIONS = ["jpg", "jpeg", "png"]
 
@@ -32,7 +38,7 @@ def get_episode_number(path: Path):
 
 
 base_path = Path(args.base_path)
-output_path = args.output_path and Path(args.output_path) or args.base_path
+output_path = args.output_path and Path(args.output_path) or Path(args.base_path)
 output_path.mkdir(exist_ok=True)
 
 episoide_per_pack = args.episode_per_pack
@@ -47,8 +53,13 @@ def glob_images(path: Path):
 
 def grouper(folders):
     while folders:
+        if len(folders) < episoide_per_pack * 2 and args.trailing == "merge":
+            yield folders
+            return
         yield folders[:episoide_per_pack]
         folders = folders[episoide_per_pack:]
+        if len(folders) < episoide_per_pack and args.trailing == "ignore":
+            return
 
 
 def check_image_file_length(folders):
