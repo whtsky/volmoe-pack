@@ -23,7 +23,7 @@ parser.add_argument(
     "--trailing",
     choices=["merge", "ignore", "pack"],
     help="how to deal with trailing volumes",
-    default="pack"
+    default="pack",
 )
 
 args = parser.parse_args()
@@ -81,11 +81,19 @@ for group in grouper(folders):
     zip_path = output_path / "{}.zip".format(pack_name)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         navpoints = []
-        for ep_folder in group:
+        group_pad_width = max(len(str(len(group))), 3)
+        for i, ep_folder in enumerate(group):
             files = glob_images(ep_folder)
+            folder_name = str(i).zfill(group_pad_width)
             # Add images
             for file in files:
-                zf.write(str(file), ep_folder.name + "/" + file.name)
+                zf.write(str(file), folder_name + "/" + file.name)
             # Add navpoint
-            navpoints.append("{0},{0}={1}".format(ep_folder.name, files[0].name))
+            navpoints.append(
+                "{ep_name},{folder_name}={file_name}".format(
+                    ep_name=ep_folder.name,
+                    folder_name=folder_name,
+                    file_name=files[0].name,
+                )
+            )
         zf.writestr("vol-navpoint.txt", "\n".join(navpoints))
