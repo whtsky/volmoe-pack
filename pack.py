@@ -62,16 +62,9 @@ def grouper(folders):
             return
 
 
-def check_image_file_length(folders):
-    files = list(itertools.chain(*map(glob_images, folders)))
-    if len(set(map(len, [x.stem for x in files]))) not in (0, 1):
-        raise Exception("文件名数字序号长度需要保持一致\n%s" % "\n".join(map(str, files)))
-
-
 folders = sorted(
     [x for x in base_path.iterdir() if x.is_dir() and not x.name.startswith(".")]
 )
-check_image_file_length(folders)
 for group in grouper(folders):
     print(group)
     pack_name = "{}-{}".format(
@@ -81,19 +74,24 @@ for group in grouper(folders):
     zip_path = output_path / "{}.zip".format(pack_name)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         navpoints = []
-        group_pad_width = max(len(str(len(group))), 3)
+        group_pad_width = min(len(str(len(group))), 3)
         for i, ep_folder in enumerate(group):
             files = glob_images(ep_folder)
-            folder_name = str(i).zfill(group_pad_width)
+            if len(set(map(len, [x.stem for x in files]))) not in (0, 1):
+                raise Exception("文件名数字序号长度需要保持一致\n%s" % "\n".join(map(str, files)))
+            file_pad_width = min(len(str(len(files))), 3)
+            folder_name = str(i).zfill(file_pad_width)
+            first_filename = "0".zfill(file_pad_width) + files[0].suffix
             # Add images
-            for file in files:
-                zf.write(str(file), folder_name + "/" + file.name)
+            for file_i, file in enumerate(files):
+                filename = str(file_i).zfill(file_pad_width) + file.suffix
+                zf.write(str(file), folder_name + "/" + filename)
             # Add navpoint
             navpoints.append(
                 "{ep_name},{folder_name}={file_name}".format(
                     ep_name=ep_folder.name,
                     folder_name=folder_name,
-                    file_name=files[0].name,
+                    file_name=first_filename,
                 )
             )
         zf.writestr("vol-navpoint.txt", "\n".join(navpoints))
