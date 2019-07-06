@@ -89,7 +89,7 @@ for group in grouper(folders):
             # Add navpoint
             navpoints.append(
                 "{ep_name},{folder_name}={file_name}".format(
-                    ep_name=ep_folder.name,
+                    ep_name=ep_folder.name.strip(),
                     folder_name=folder_name,
                     file_name=first_filename,
                 )
